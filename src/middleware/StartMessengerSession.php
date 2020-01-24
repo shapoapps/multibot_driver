@@ -29,7 +29,6 @@ class StartMessengerSession
             return $next($request);
         }
 
-	$response = $next($request);
 
 	$request_detection_result = $this->DetectMessenger();
 
@@ -38,7 +37,9 @@ class StartMessengerSession
              $this->collectGarbage($session);
              $this->saveSession($request);
         }
-
+	
+	$response = $next($request);
+	$this->saveSession($request);
         return $response;
     }
 
