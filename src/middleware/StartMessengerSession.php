@@ -56,6 +56,9 @@ class StartMessengerSession
     {
         return tap($this->manager->driver(), function ($session) use ($request, $request_detection_result) {
 	        $session->setId($request_detection_result['user_session']);
+		if(isset($request_detection_result['telegram_callback_query'])) {
+		    $session::$is_telegram_callback = true;
+		}
         });
     }
 
@@ -101,7 +104,6 @@ class StartMessengerSession
         $request_method = $_SERVER['REQUEST_METHOD'];
         $raw_request_body = $request_obj->getContent();
 
-
         $check_result = $this->CheckIsViberRequest($headers_collection, $request_method, $raw_request_body);
         if (is_array($check_result)) {
             return $check_result;
@@ -123,6 +125,7 @@ class StartMessengerSession
 
 
 
+
     private function CheckIsViberRequest($headers_collection, $request_method, $request_body) {
         $check_result = $headers_collection->has('X-Viber-Content-Signature');
         if($request_method == 'POST' and $check_result) {
@@ -139,9 +142,17 @@ class StartMessengerSession
     private function CheckIsTelegramRequest($headers_collection, $request_method, $raw_request_body) {
         if($request_method == 'POST' and !is_null($headers_collection->get('Content-Type')) and preg_match('/(application.*json)/i', $headers_collection->get('Content-Type'), $matches) == true) {
             $request_body = json_decode($raw_request_body);
-            if(isset($request_body->update_id) and isset($request_body->message->message_id) and isset($request_body->message->from) and isset($request_body->message->from->id) and isset($request_body->message->date)) {
-                return $this->generateMessengerSessionID('telegram', $request_body->message->from->id); 
-            }
+	    if(!isset($request_body->callback_query)) {
+        	if(isset($request_body->update_id) and isset($request_body->message->message_id) and isset($request_body->message->from) and isset($request_body->message->from->id) and isset($request_body->message->date)) {
+            	    return $this->generateMessengerSessionID('telegram', $request_body->message->from->id); 
+        	}
+	    } else {
+        	if(isset($request_body->update_id) and isset($request_body->callback_query->from->id) and isset($request_body->callback_query->data)) {
+		    $output_array = $this->generateMessengerSessionID('telegram', $request_body->callback_query->from->id);
+		    $output_array['telegram_callback_query'] = true;
+            	    return  $output_array;
+        	}
+	    }
         }
     }
 
@@ -163,15 +174,15 @@ class StartMessengerSession
     private function generateMessengerSessionID($messenger_type, $sender_id) {
 		if($this->CheckIsMultiboteModeON()) {
 		    $output = array();
-            $output['messenger_type'] = $messenger_type;
-            $output['user_session'] = sha1('bot_'.ShapoappsMultibotDriver::$current_bot['internal_bot_id'].'_'.$messenger_type.'_'.$sender_id);
+        	    $output['messenger_type'] = $messenger_type;
+        	    $output['user_session'] = sha1('bot_'.ShapoappsMultibotDriver::$current_bot['internal_bot_id'].'_'.$messenger_type.'_'.$sender_id);
 		    MessengerStore::$messenger_userid = $sender_id;
 		    return $output;
 		} 
 		else {
-            $output = array();
-            $output['messenger_type'] = $messenger_type;
-            $output['user_session'] = sha1($messenger_type.'_'.$sender_id);
+        	    $output = array();
+        	    $output['messenger_type'] = $messenger_type;
+        	    $output['user_session'] = sha1($messenger_type.'_'.$sender_id);
 		    MessengerStore::$messenger_userid = $sender_id;
 		    return $output;
 		}
@@ -183,18 +194,6 @@ class StartMessengerSession
         if(config('shapoapps.shapoapps_multibot.multibot_mode') == true and !empty(ShapoappsMultibotDriver::$current_bot)) {
             return true;
         }
-    }
-
-
-
-
-    public function debug_to_file($message)
-    {
-        $date = date('m/d/Y h:i:s a', time());
-        $fp = fopen('/var/log/nginx/telegram_bots/get_your_telegram_id_bot/custom_log.txt', 'a');
-        $message_for_insert = "\r\n".$date."\r\n---------------------------------------------------\r\n".$message."\r\n---------------------------------------------------\r\n";
-        fwrite($fp, $message_for_insert);
-        fclose($fp);
     }
 
 }

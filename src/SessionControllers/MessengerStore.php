@@ -47,6 +47,10 @@ class MessengerStore
     public static $messenger_userid;
 
 
+    public static $is_telegram_callback;
+
+
+
     public function __construct(SessionHandlerInterface $handler, $id = null)
     {
         $this->setId($id);
@@ -88,7 +92,6 @@ class MessengerStore
     {
         if ($data = $this->handler->read($this->getId())) {
             $data = @unserialize($this->prepareForUnserialize($data));
-
             if ($data !== false && ! is_null($data) && is_array($data)) {
                 return $data;
             }
@@ -137,6 +140,37 @@ class MessengerStore
     {
         return $data;
     }
+
+
+
+    /**
+     * Check is all session arrays are empty?.
+     * return true if empty and false if not
+     * @return void
+     */
+    public function IsSessionEmpty()
+    {
+	$session_data = $this->all();
+	return $this->IsEmptyMultidimensionalArray($session_data);
+    }
+
+
+
+    public function IsEmptyMultidimensionalArray($array) {
+        $empty = TRUE;
+        if (is_array($array)) {
+            foreach ($array as $value) {
+                if (!$this->IsEmptyMultidimensionalArray($value)) {
+                    $empty = FALSE;
+                }
+            }
+        } elseif (!empty($array)) {
+            $empty = FALSE;
+        }
+        return $empty;
+    }
+
+
 
 
     /**

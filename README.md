@@ -708,13 +708,13 @@ Laravel Job - returns true otherwise false.
 <br>
 
 
-### Methods of the sessions manager
+### Properties and methods of the sessions manager
 
 To access an object - use `$session_driver = resolve('session_driver_interface');` <br>
 
 
-
-
+<b>$session_driver::$is_telegram_callback</b> - if telegram callback request received - return true, otherwise false.
+<br>
 
 <b>save()</b> - Saves the session data to the storage.
 <br>
@@ -804,6 +804,9 @@ To access an object - use `$session_driver = resolve('session_driver_interface')
 <br>
 
 <b>isValidId($id)</b> - Checks the format of the user session ID. Valid Latin numbers, letters 40 characters long.
+<br>
+
+<b>IsSessionEmpty()</b> - if the session data arrays are empty - returns true, otherwise false.
 <br>
 
 <br>
