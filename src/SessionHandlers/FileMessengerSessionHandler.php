@@ -41,6 +41,9 @@ class FileMessengerSessionHandler implements SessionHandlerInterface
 
     public function read($sessionId)
     {
+
+	if(empty($sessionId)) { return; }
+
         if ($this->files->isFile($path = $this->path.'/'.$sessionId)) {
             if ($this->files->lastModified($path) >= Carbon::now()->subMinutes($this->minutes)->getTimestamp()) {
                 return $this->files->sharedGet($path);
@@ -53,6 +56,9 @@ class FileMessengerSessionHandler implements SessionHandlerInterface
 
     public function write($sessionId, $data)
     {
+
+	if(empty($sessionId)) { return; }
+
         $this->files->put($this->path.'/'.$sessionId, $data, true);
 
         return true;
@@ -61,6 +67,9 @@ class FileMessengerSessionHandler implements SessionHandlerInterface
 
     public function destroy($sessionId)
     {
+
+	if(empty($sessionId)) { return; }
+
         $this->files->delete($this->path.'/'.$sessionId);
 
         return true;

@@ -243,6 +243,11 @@ class ShapoappsMultibotDriver
 
     private static function SetCurrentBot_InSystem($current_bot_settings)
     {
+
+	if(!isset($current_bot_settings['messenger_type']) or empty($current_bot_settings['messenger_type'])) {
+	    return;
+	}
+
         if ($current_bot_settings['messenger_type'] == 'telegram') {
             if (self::CheckIsBotmanTelegramDriverInstalled()) {
                 config(['botman.telegram.token' => $current_bot_settings['bot_api_key']]);
